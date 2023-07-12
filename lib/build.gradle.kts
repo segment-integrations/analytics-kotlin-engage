@@ -60,7 +60,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.4")
 
     // Add Roboelectric dependencies.
-    testImplementation("org.robolectric:robolectric:4.7.3")
+    testImplementation("org.robolectric:robolectric:4.10.3")
     testImplementation("androidx.test:core:1.5.0")
 
     // Add JUnit4 legacy dependencies.
@@ -69,7 +69,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.7.2"))
 
     // For JSON Object testing
-    testImplementation("org.json:json:20200518")
+    testImplementation("org.json:json:20230227")
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 }
 
