@@ -416,7 +416,9 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val media by lazy {
-            remoteMessage.data["_media"]
+            remoteMessage.data["media"]?.let {
+                Json.parseToJsonElement(it) as? JsonArray
+            }
         }
 
         val priority by lazy {
