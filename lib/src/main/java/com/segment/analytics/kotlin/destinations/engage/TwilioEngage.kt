@@ -34,11 +34,11 @@ import kotlinx.serialization.json.*
 class TwilioEngage(
     private val context: Context,
     private val statusCallback: StatusCallback? = null,
-    tapActionButtonsCallback: TapActionButtonsCallback? = null
+    notificationCustomizationCallback: NotificationCustomizationCallback? = null
 ): EventPlugin, AndroidLifecycle {
 
     init {
-        RemoteNotifications.tapActionButtonsCallback = tapActionButtonsCallback
+        RemoteNotifications.notificationCustomizationCallback = notificationCustomizationCallback
     }
 
     override lateinit var analytics: Analytics
@@ -299,7 +299,7 @@ class TwilioEngage(
 object RemoteNotifications {
     private val messageObservers: MutableSet<(JsonElement) -> Unit> = mutableSetOf()
 
-    internal var tapActionButtonsCallback: TapActionButtonsCallback? = null
+    internal var notificationCustomizationCallback: NotificationCustomizationCallback? = null
 
     internal var analyticsWriteKey: String? = null
 
@@ -380,9 +380,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             .setNumber(badgeCount)
             .setSound(customizations.sound)
 
-        customizations.tapActionButtons?.let {
-            RemoteNotifications.tapActionButtonsCallback?.invoke(builder, it)
-        }
+        RemoteNotifications.notificationCustomizationCallback?.invoke(builder, customizations)
         nm.notify(123456789, builder.build())
     }
 
@@ -452,5 +450,5 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
     }
 }
 
-typealias TapActionButtonsCallback = (builder: NotificationCompat.Builder, tapActionButtons: JsonArray) -> Unit
+typealias NotificationCustomizationCallback = (builder: NotificationCompat.Builder, customization: EngageFirebaseMessagingService.Customizations) -> Unit
 typealias StatusCallback = (previous: TwilioEngage.Status, current: TwilioEngage.Status) -> Unit
