@@ -6,5 +6,5 @@ build
 
 .idea
 lib/build
-local.propertiestestapp/google-services.json
 local.properties
+testapp/google-services.json
