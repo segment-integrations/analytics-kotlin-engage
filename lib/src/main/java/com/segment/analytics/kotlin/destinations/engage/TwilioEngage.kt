@@ -359,7 +359,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             remoteMessage.data.forEach { (key, value) ->
                 putExtra(key, value)
             }
-            data = customizations.deepLink
+            data = customizations.link
         }
 
         // create notification
@@ -393,8 +393,8 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             remoteMessage.data["twi_body"] ?: "New message from Twilio Engage"
         }
 
-        val deepLink by lazy {
-            if(remoteMessage.data["deepLink"] != null) Uri.parse(remoteMessage.data["deepLink"]) else null
+        val link by lazy {
+            if(remoteMessage.data["link"] != null) Uri.parse(remoteMessage.data["link"]) else null
         }
 
         val badgeAmount by lazy {
