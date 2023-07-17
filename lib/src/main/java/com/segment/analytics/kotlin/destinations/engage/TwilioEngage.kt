@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -25,6 +26,7 @@ import com.segment.analytics.kotlin.core.IdentifyEvent
 import com.segment.analytics.kotlin.core.TrackEvent
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
+import com.segment.analytics.kotlin.core.utilities.getString
 import com.segment.analytics.kotlin.core.utilities.set
 import com.segment.analytics.kotlin.core.utilities.toJsonElement
 import com.segment.analytics.kotlin.core.utilities.updateJsonObject
@@ -352,39 +354,118 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         val badgeCount = customizations.computeBadgeCount(sharedPreferences.getInt("BadgeCount", 0))
         sharedPreferences.edit().putInt("BadgeCount", badgeCount).apply()
 
-        // get the intent of the default activity
-        val pm: PackageManager = applicationContext.packageManager
-        val intent = pm.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-            putExtra("push_notification", true)
-            remoteMessage.data.forEach { (key, value) ->
-                putExtra(key, value)
-            }
-            data = customizations.link
-        }
-
         // create notification
-        val pi = PendingIntent.getActivity(applicationContext, 101, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         val nm = applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel("222", "my_channel", NotificationManager.IMPORTANCE_HIGH)
             nm.createNotificationChannel(channel)
         }
         val builder = NotificationCompat.Builder(applicationContext, "222")
-            .setSmallIcon(androidx.core.R.drawable.notification_icon_background)
             .setContentTitle(customizations.title)
             .setAutoCancel(true)
             .setContentText(customizations.body)
-            .setContentIntent(pi)
-            .setDeleteIntent(pi)
             .setPriority(customizations.priority)
             .setNumber(badgeCount)
             .setSound(customizations.sound)
 
+        // customizations
+        attachTapAction(builder, customizations)
+        attachTapActionButtons(builder, customizations)
         RemoteNotifications.notificationCustomizationCallback?.invoke(builder, customizations)
+
+        // show the notification
         nm.notify(123456789, builder.build())
     }
 
-    class Customizations(private val remoteMessage: RemoteMessage) {
+    /**
+     * attach top level tap action (action performed when user hits the notification)
+     */
+    private fun attachTapAction(builder: NotificationCompat.Builder, customizations: Customizations) {
+        val pi = getPredefinedActionIntent(customizations.tapAction, customizations.link, customizations.remoteMessage)
+        builder.setContentIntent(pi)
+            .setDeleteIntent(pi)
+    }
+
+    /**
+     * attach action buttons to notification and filter out predefined actions buttons
+     */
+    private fun attachTapActionButtons(builder: NotificationCompat.Builder, customizations: Customizations) {
+        val customActionButtons = buildJsonArray {
+            customizations.tapActionButtons?.forEach {
+                if (it is JsonObject) {
+                    val link = it.getString("link")
+                    val uri = if (link != null) Uri.parse(link) else null
+                    val action = getPredefinedAction(it.getString("text"), it.getString("onTap"), uri, customizations.remoteMessage)
+                    builder.addAction(action)
+
+                    //  if it's not a predefined action, we need to keep it for callback
+                    if (action == null) {
+                        add(it)
+                    }
+                }
+            }
+        }
+
+        // overwrite `tapActionButtons` with unhandled action buttons
+        // so developer can handle them in the callback
+        customizations.tapActionButtons = customActionButtons
+    }
+
+    /**
+     * returns a `NotificationCompat.Action`, which defines the action button's appearance and action
+     */
+    private fun getPredefinedAction(text: String?, onTap: String?, link: Uri?, remoteMessage: RemoteMessage): NotificationCompat.Action? {
+        val intent = getPredefinedActionIntent(onTap, link, remoteMessage)
+        return when (onTap) {
+            "open_app" -> {
+                // passing `0` to set icon to null
+                NotificationCompat.Action(0, text, intent)
+            }
+            "open_url" -> {
+                NotificationCompat.Action(0, text, intent)
+            }
+            "deep_link" -> {
+                NotificationCompat.Action(0, text, intent)
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * returns a `PendingIntent` that defines the action of a tap. can be used for the following:
+     *      1. top level tap action (action that performed when the push is tapped)
+     *      2. action button's action (action that performed when the action button is tapped)
+     */
+    private fun getPredefinedActionIntent(onTap: String?, link: Uri?, remoteMessage: RemoteMessage): PendingIntent {
+        val intent = when (onTap) {
+            "open_app" -> {
+                // get the intent of the default activity
+                val pm: PackageManager = applicationContext.packageManager
+                pm.getLaunchIntentForPackage(applicationContext.packageName)
+            }
+            "open_url" -> {
+                Intent(Intent.ACTION_VIEW).apply {
+                    data = link
+                }
+            }
+            "deep_link" -> {
+                // get the intent of the default activity
+                val pm: PackageManager = applicationContext.packageManager
+                pm.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                    putExtra("push_notification", true)
+                    remoteMessage.data.forEach { (key, value) ->
+                        putExtra(key, value)
+                    }
+                    data = link
+                }
+            }
+            else -> null
+        }
+
+        return PendingIntent.getActivity(applicationContext, 101, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    class Customizations(val remoteMessage: RemoteMessage) {
         val title by lazy {
             remoteMessage.data["twi_title"] ?: "Twilio Engage"
         }
@@ -431,10 +512,8 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             remoteMessage.data["deliveryCallbackUrl"]
         }
 
-        val tapActionButtons by lazy {
-            remoteMessage.data["tapActionButtons"]?.let {
-                Json.parseToJsonElement(it) as? JsonArray
-            }
+        var tapActionButtons = remoteMessage.data["tapActionButtons"]?.let {
+            Json.parseToJsonElement(it) as? JsonArray
         }
 
         fun computeBadgeCount(currentCount: Int): Int {
