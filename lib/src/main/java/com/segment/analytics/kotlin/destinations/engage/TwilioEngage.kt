@@ -483,7 +483,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val tapAction by lazy {
-            remoteMessage.data["click_action"]
+            remoteMessage.data["twi_action"]
         }
 
         val sound by lazy {
