@@ -55,9 +55,7 @@ class TwilioEngage(
     enum class Status (val value : String){
         Subscribed("SUBSCRIBED"),
         DidNotSubscribe("DID_NOT_SUBSCRIBE"),
-        // TODO: values of Unsubscribed and Disabled are swapped, because backend currently does not recognize DISABLED. swap it back when backend supports DISABLED
-        Unsubscribed("DISABLED"),
-        Disabled("UNSUBSCRIBED");
+        Unsubscribed("UNSUBSCRIBED");
 
         companion object {
             fun from(str: String?): Status? {
@@ -88,7 +86,7 @@ class TwilioEngage(
         get() {
             val value = sharedPreferences.getString("Status", Status.DidNotSubscribe.value)
             val status = Status.from(value)
-            return status ?: Status.Disabled
+            return status ?: Status.Unsubscribed
         }
         set(value) {
             if (status != value) {
@@ -120,14 +118,14 @@ class TwilioEngage(
                     Status.Subscribed
                 }
                 PackageManager.PERMISSION_DENIED -> {
-                    Status.Disabled
+                    Status.Unsubscribed
                 }
                 else -> {
                     Status.DidNotSubscribe
                 }
             }
         } else {
-            if(NotificationManagerCompat.from(context).areNotificationsEnabled()) Status.Subscribed else Status.Disabled
+            if(NotificationManagerCompat.from(context).areNotificationsEnabled()) Status.Subscribed else Status.Unsubscribed
         }
 
         if (newStatus != status) {
@@ -207,7 +205,7 @@ class TwilioEngage(
     }
 
     private fun onStatusChanged(status: Status) {
-        if (status == Status.Disabled) {
+        if (status == Status.Unsubscribed) {
             declinedNotifications()
         } else {
             FirebaseMessaging.getInstance().token
@@ -225,7 +223,7 @@ class TwilioEngage(
     }
 
     fun declinedNotifications() {
-        status = Status.Disabled
+        status = Status.Unsubscribed
 
         RemoteNotifications.unregisterMessageObserver(::receivedNotification)
 
