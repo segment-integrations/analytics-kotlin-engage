@@ -26,10 +26,10 @@ import com.segment.analytics.kotlin.core.IdentifyEvent
 import com.segment.analytics.kotlin.core.TrackEvent
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
-import com.segment.analytics.kotlin.core.utilities.getString
 import com.segment.analytics.kotlin.core.utilities.set
 import com.segment.analytics.kotlin.core.utilities.toJsonElement
 import com.segment.analytics.kotlin.core.utilities.updateJsonObject
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 
@@ -362,6 +362,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
         val builder = NotificationCompat.Builder(applicationContext, "222")
             .setContentTitle(customizations.title)
+            .setSmallIcon(applicationInfo.icon)
             .setAutoCancel(true)
             .setContentText(customizations.body)
             .setPriority(customizations.priority)
@@ -390,19 +391,16 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
      * attach action buttons to notification and filter out predefined actions buttons
      */
     private fun attachTapActionButtons(builder: NotificationCompat.Builder, customizations: Customizations) {
-        val customActionButtons = buildJsonArray {
-            customizations.tapActionButtons?.forEach {
-                if (it is JsonObject) {
-                    val link = it.getString("link")
-                    val uri = if (link != null) Uri.parse(link) else null
-                    val action = getPredefinedAction(it.getString("text"), it.getString("onTap"), uri, customizations.remoteMessage)
-                    builder.addAction(action)
+        val customActionButtons = mutableListOf<TapActionButton>()
 
-                    //  if it's not a predefined action, we need to keep it for callback
-                    if (action == null) {
-                        add(it)
-                    }
-                }
+        customizations.tapActionButtons?.forEach {
+            val uri = if (it.link != null) Uri.parse(it.link) else null
+            val action = getPredefinedAction(it.text, it.onTap, uri, customizations.remoteMessage)
+            builder.addAction(action)
+
+            //  if it's not a predefined action, we need to keep it for callback
+            if (action == null) {
+                customActionButtons.add(it)
             }
         }
 
@@ -436,12 +434,11 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
      *      1. top level tap action (action that performed when the push is tapped)
      *      2. action button's action (action that performed when the action button is tapped)
      */
-    private fun getPredefinedActionIntent(onTap: String?, link: Uri?, remoteMessage: RemoteMessage): PendingIntent {
+    private fun getPredefinedActionIntent(onTap: String?, link: Uri?, remoteMessage: RemoteMessage): PendingIntent? {
         val intent = when (onTap) {
             "open_app" -> {
                 // get the intent of the default activity
-                val pm: PackageManager = applicationContext.packageManager
-                pm.getLaunchIntentForPackage(applicationContext.packageName)
+                packageManager.getLaunchIntentForPackage(applicationContext.packageName)
             }
             "open_url" -> {
                 Intent(Intent.ACTION_VIEW).apply {
@@ -450,8 +447,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             }
             "deep_link" -> {
                 // get the intent of the default activity
-                val pm: PackageManager = applicationContext.packageManager
-                pm.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
                     putExtra("push_notification", true)
                     remoteMessage.data.forEach { (key, value) ->
                         putExtra(key, value)
@@ -459,7 +455,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
                     data = link
                 }
             }
-            else -> null
+            else -> return null
         }
 
         return PendingIntent.getActivity(applicationContext, 101, intent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -491,12 +487,12 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val sound by lazy {
-            if(remoteMessage.data["twi_sound"] != null) Uri.parse(remoteMessage.data["sound"]) else null
+            if(remoteMessage.data["twi_sound"] != null) Uri.parse(remoteMessage.data["twi_sound"]) else null
         }
 
         val media by lazy {
             remoteMessage.data["media"]?.let {
-                Json.parseToJsonElement(it) as? JsonArray
+                Json.decodeFromString<List<String>>(it)
             }
         }
 
@@ -513,7 +509,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         var tapActionButtons = remoteMessage.data["tapActionButtons"]?.let {
-            Json.parseToJsonElement(it) as? JsonArray
+            Json.decodeFromString<List<TapActionButton>>(it)
         }
 
         fun computeBadgeCount(currentCount: Int): Int {
@@ -527,6 +523,9 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             return if (count > 0) count else 0
         }
     }
+
+    @Serializable
+    data class TapActionButton(val id: String, val text: String, val onTap: String, val link: String? = null)
 }
 
 typealias NotificationCustomizationCallback = (builder: NotificationCompat.Builder, customization: EngageFirebaseMessagingService.Customizations) -> Unit
