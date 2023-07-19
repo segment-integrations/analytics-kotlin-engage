@@ -32,7 +32,12 @@ import com.segment.analytics.kotlin.core.utilities.updateJsonObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
-
+/**
+ * Plugin that enables Twilio Engage push notification subscriptions and customizations
+ * @property context Context of the application
+ * @property statusCallback Callback that reports subscription status changes
+ * @param notificationCustomizationCallback Callback that provides notification builder and customizations
+ */
 class TwilioEngage(
     private val context: Context,
     private val statusCallback: StatusCallback? = null,
@@ -459,6 +464,9 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         return PendingIntent.getActivity(applicationContext, 101, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
+    /**
+     * Class that holds `RemoteMessage` from FCM and decode them to properties for easier access
+     */
     class Customizations(val remoteMessage: RemoteMessage) {
         val title by lazy {
             remoteMessage.data["twi_title"] ?: "Twilio Engage"
@@ -522,6 +530,9 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Class that decodes `tapActionButton` object for easier access to its properties
+     */
     @Serializable
     data class TapActionButton(val id: String, val text: String, val onTap: String, val link: String? = null)
 }
