@@ -73,7 +73,7 @@ class TwilioEngage(
         Tapped("Notification Opened"),
         Received("Notification Delivered"),
         Registered("Registered for Notifications"),
-        Unregistered ("Unable to register for Notifications"),
+        Unregistered ("Unable to Register for Notifications"),
         Changed("Notifications Subscription Change"),
         Declined ("Notifications Subscription Declined");
 
