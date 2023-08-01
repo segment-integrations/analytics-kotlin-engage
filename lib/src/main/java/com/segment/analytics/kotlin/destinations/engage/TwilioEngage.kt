@@ -461,7 +461,8 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             else -> return null
         }
 
-        return PendingIntent.getActivity(applicationContext, 101, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        return PendingIntent.getActivity(applicationContext, 101, intent, flag)
     }
 
     /**
