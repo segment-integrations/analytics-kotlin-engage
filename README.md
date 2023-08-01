@@ -24,7 +24,20 @@ to integrate Segment's Analytics SDK to your app.
     implementation 'com.segment.analytics.kotlin.destinations:engage:<LATEST_VERSION>'
 ```
 
-3. add this plugin to your Analytics instance:
+3. add the following service to your AndroidManifest.xml `application` tag
+
+```xml
+    <service
+        android:name="com.segment.analytics.kotlin.destinations.engage.EngageFirebaseMessagingService"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+          <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>
+```
+
+4. add this plugin to your Analytics instance:
 ```kotlin
     analytics.add(TwilioEngage(applicationContext))
 ```
