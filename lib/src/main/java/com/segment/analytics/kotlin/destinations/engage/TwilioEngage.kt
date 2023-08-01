@@ -20,10 +20,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.segment.analytics.kotlin.android.Analytics
 import com.segment.analytics.kotlin.android.plugins.AndroidLifecycle
-import com.segment.analytics.kotlin.core.Analytics
-import com.segment.analytics.kotlin.core.BaseEvent
-import com.segment.analytics.kotlin.core.IdentifyEvent
-import com.segment.analytics.kotlin.core.TrackEvent
+import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
 import com.segment.analytics.kotlin.core.utilities.set
@@ -110,6 +107,9 @@ class TwilioEngage(
         // save the writeKey to setup a different Analytics instance in firebase service
         // so we can report notification delivery even the app is closed
         RemoteNotifications.analyticsWriteKey = analytics.configuration.writeKey
+        // we have to save the following info for purpose of testing against stage env.
+        RemoteNotifications.analyticsApiHost = analytics.configuration.apiHost
+        RemoteNotifications.analyticsCdnHost = analytics.configuration.cdnHost
     }
 
     override fun reset() {
@@ -308,6 +308,10 @@ object RemoteNotifications {
 
     internal var analyticsWriteKey: String? = null
 
+    internal var analyticsApiHost: String? = null
+
+    internal var analyticsCdnHost: String? = null
+
     fun publishMessage(message: JsonElement) {
 
         Log.d("TwilioEngageTest", "publishMessage: $message")
@@ -328,12 +332,13 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
     private val analytics by lazy {
         RemoteNotifications.analyticsWriteKey?.let { writeKey ->
             Analytics(writeKey, applicationContext) {
-                apiHost = "api.segment.build/v1"
-                cdnHost = "cdn-settings.segment.build/v1"
-                trackDeepLinks = true
-                trackApplicationLifecycleEvents = true
+                apiHost = RemoteNotifications.analyticsApiHost ?: Constants.DEFAULT_API_HOST
+                cdnHost = RemoteNotifications.analyticsCdnHost ?: Constants.DEFAULT_CDN_HOST
+                // we want to track notification delivery right away
                 flushAt = 1
-                flushInterval = 10
+                // no need to periodical flushing, since this analytics instance is only used for
+                // tracking notification delivery event
+                flushInterval = 0
             }
         }
     }
