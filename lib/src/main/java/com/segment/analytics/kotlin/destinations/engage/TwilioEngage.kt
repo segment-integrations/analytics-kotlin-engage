@@ -67,12 +67,12 @@ class TwilioEngage(
     }
 
     internal enum class Events (val value : String) {
-        Tapped("Notification Opened"),
-        Received("Notification Delivered"),
-        Registered("Registered for Notifications"),
-        Unregistered ("Unable to Register for Notifications"),
-        Changed("Notifications Subscription Change"),
-        Declined ("Notifications Subscription Declined");
+        Tapped("Push Opened"),
+        Received("Push Delivered"),
+        Registered("Registered for Push"),
+        Unregistered ("Unable to Register for Push"),
+        Changed("Push Subscription Change"),
+        Declined ("Push Subscription Declined");
 
         companion object {
             fun from(str: String?): Events? {
