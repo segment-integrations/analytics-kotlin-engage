@@ -232,7 +232,6 @@ class TwilioEngage(
 
         RemoteNotifications.unregisterMessageObserver(::receivedNotification)
 
-        analytics.identify()
         analytics.track(Events.Declined.value)
         Log.d("TwilioEngageTest", "Push Notifications were declined.")
     }
@@ -243,7 +242,6 @@ class TwilioEngage(
 
         RemoteNotifications.registerMessageObserver(::receivedNotification)
 
-        analytics.identify()
         analytics.track(Events.Registered.value)
         Log.d("TwilioEngageTest", "Registered for Push Notifications (token=$token)")
     }
@@ -253,7 +251,6 @@ class TwilioEngage(
 
         RemoteNotifications.unregisterMessageObserver(::receivedNotification)
 
-        analytics.identify()
         analytics.track(Events.Unregistered.value, buildJsonObject {
             put("error", error.message)
         })
