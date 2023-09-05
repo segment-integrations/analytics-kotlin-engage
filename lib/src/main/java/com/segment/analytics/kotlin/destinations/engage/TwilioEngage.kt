@@ -23,9 +23,7 @@ import com.segment.analytics.kotlin.android.plugins.AndroidLifecycle
 import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
-import com.segment.analytics.kotlin.core.utilities.set
-import com.segment.analytics.kotlin.core.utilities.toJsonElement
-import com.segment.analytics.kotlin.core.utilities.updateJsonObject
+import com.segment.analytics.kotlin.core.utilities.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
@@ -159,6 +157,15 @@ class TwilioEngage(
 
     override fun track(payload: TrackEvent): BaseEvent? {
         Events.from(payload.event) ?: return payload
+
+        // only delivered and opened events have payload data (message_id)
+        payload.properties.getString("message_id")?.let { messageId ->
+            payload.properties = updateJsonObject(payload.properties) {
+                val formattedEventName = payload.event.lowercase().replace(' ', '_')
+                it["dedup_id"] = messageId + formattedEventName
+            }
+        }
+
         return attachSubscriptionData(payload)
     }
 
