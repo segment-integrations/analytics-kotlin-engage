@@ -96,6 +96,16 @@ class TwilioEngage(
         }
 
     var deviceToken: String? = null
+        get() {
+            if (field == null) {
+                field = sharedPreferences.getString("DeviceToken", null)
+            }
+            return field
+        }
+        set(value) {
+            field = value;
+            sharedPreferences.edit().putString("DeviceToken", value).apply()
+        }
 
     var referrer: JsonObject? = null
 
