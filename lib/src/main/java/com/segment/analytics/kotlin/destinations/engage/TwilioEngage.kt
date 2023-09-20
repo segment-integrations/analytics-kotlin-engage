@@ -366,7 +366,16 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
 
         // track payload
         val payload = remoteMessage.data.toJsonElement()
-        analytics?.track(TwilioEngage.Events.Received.value, payload)
+        analytics?.track(TwilioEngage.Events.Received.value, buildJsonObject {
+            (payload as? JsonObject)?.let {
+                putAll(it)
+
+                it.getString("message_id")?.let {messageId ->
+                    val formattedEventName = TwilioEngage.Events.Received.value.lowercase().replace(' ', '_')
+                    put("dedup_id", messageId + formattedEventName)
+                }
+            }
+        })
         RemoteNotifications.publishMessage(payload)
         val customizations = Customizations(remoteMessage)
 
