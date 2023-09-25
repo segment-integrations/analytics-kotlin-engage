@@ -7,4 +7,3 @@ build
 .idea
 lib/build
 local.properties
-testapp/google-services.json

@@ -17,7 +17,6 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.segment.analytics.kotlin.android.Analytics
 import com.segment.analytics.kotlin.android.plugins.AndroidLifecycle
 import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.EventPlugin
@@ -341,33 +340,13 @@ object RemoteNotifications {
 
 class EngageFirebaseMessagingService : FirebaseMessagingService() {
 
-    private val analytics by lazy {
-        RemoteNotifications.analyticsWriteKey?.let { writeKey ->
-            Analytics(writeKey, applicationContext) {
-                apiHost = RemoteNotifications.analyticsApiHost ?: Constants.DEFAULT_API_HOST
-                cdnHost = RemoteNotifications.analyticsCdnHost ?: Constants.DEFAULT_CDN_HOST
-                // we want to track notification delivery right away
-                flushAt = 1
-                // no need to periodical flushing, since this analytics instance is only used for
-                // tracking notification delivery event
-                flushInterval = 0
-            }
-        }
+    override fun onNewToken(token: String) {
+
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // track payload
         val payload = remoteMessage.data.toJsonElement()
-        analytics?.track(TwilioEngage.Events.Received.value, buildJsonObject {
-            (payload as? JsonObject)?.let {
-                putAll(it)
-
-                it.getString("message_id")?.let {messageId ->
-                    val formattedEventName = TwilioEngage.Events.Received.value.lowercase().replace(' ', '_')
-                    put("dedup_id", messageId + formattedEventName)
-                }
-            }
-        })
         RemoteNotifications.publishMessage(payload)
         val customizations = Customizations(remoteMessage)
 
