@@ -1,0 +1,97 @@
+{
+  "project_info": {
+    "project_number": "985788479495",
+    "project_id": "twilioengagepush",
+    "storage_bucket": "twilioengagepush.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985788479495:android:58702def248a52c66692a2",
+        "android_client_info": {
+          "package_name": "com.segment.analytics.destinations.mydestination.testapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoyoE5wj5-NbZ0l2Nx79gBOaMpuSV605w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985788479495:android:d6ef8de873af872d6692a2",
+        "android_client_info": {
+          "package_name": "com.segment.kotlinsample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoyoE5wj5-NbZ0l2Nx79gBOaMpuSV605w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:985788479495:android:8c96ed1fa3135d786692a2",
+        "android_client_info": {
+          "package_name": "com.segment.twilioengagedemo.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoyoE5wj5-NbZ0l2Nx79gBOaMpuSV605w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "985788479495-qir08o56d81q9sjilurp2d8qu0gfv4ji.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
