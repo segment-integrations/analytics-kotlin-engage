@@ -11,7 +11,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -23,6 +22,7 @@ import com.segment.analytics.kotlin.android.plugins.AndroidLifecycle
 import com.segment.analytics.kotlin.core.*
 import com.segment.analytics.kotlin.core.platform.EventPlugin
 import com.segment.analytics.kotlin.core.platform.Plugin
+import com.segment.analytics.kotlin.core.platform.plugins.logger.log
 import com.segment.analytics.kotlin.core.utilities.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -142,7 +142,7 @@ class TwilioEngage(
         }
 
         if (newStatus != status) {
-            Log.d("TwilioEngageTest", "Push Status Changed, old=$status, new=$newStatus")
+            analytics.log("TwilioEngage: Push Status Changed, old=$status, new=$newStatus")
             onStatusChanged(newStatus)
             status = newStatus
 
@@ -156,7 +156,7 @@ class TwilioEngage(
                 .addOnSuccessListener { token ->
                     deviceToken = token
                     RemoteNotifications.registerMessageObserver(::receivedNotification)
-                    Log.d("TwilioEngageTest", "Subscribe, token=$token")
+                    analytics.log("TwilioEngage: Subscribe, token=$token")
                 }
         }
     }
@@ -222,7 +222,7 @@ class TwilioEngage(
 
         if (fromLaunch) {
             analytics.track(Events.Tapped.value, properties)
-            Log.d("TwilioEngageTest", "Push Notification Tapped (launch=true)")
+            analytics.log("TwilioEngage: Push Notification Tapped (launch=true)")
         }
     }
 
@@ -250,7 +250,7 @@ class TwilioEngage(
         RemoteNotifications.unregisterMessageObserver(::receivedNotification)
 
         analytics.track(Events.Declined.value)
-        Log.d("TwilioEngageTest", "Push Notifications were declined.")
+        analytics.log("TwilioEngage: Push Notifications were declined.")
     }
 
     fun registeredForNotifications(token: String) {
@@ -260,7 +260,7 @@ class TwilioEngage(
         RemoteNotifications.registerMessageObserver(::receivedNotification)
 
         analytics.track(Events.Registered.value)
-        Log.d("TwilioEngageTest", "Registered for Push Notifications (token=$token)")
+        analytics.log("TwilioEngage: Registered for Push Notifications (token=$token)")
     }
 
     fun failedToRegisterForNotification(error: Exception) {
@@ -271,7 +271,7 @@ class TwilioEngage(
         analytics.track(Events.Unregistered.value, buildJsonObject {
             put("error", error.message)
         })
-        Log.d("TwilioEngageTest", "Unable to register for Push Notifications (error=$error)")
+        analytics.log("TwilioEngage: Unable to register for Push Notifications (error=$error)")
     }
 
     override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {
@@ -291,7 +291,7 @@ class TwilioEngage(
                     }
                 }
 
-                Log.d("TwilioEngageTest", "onActivityCreated: $payload")
+                analytics.log("TwilioEngage: onActivityCreated: $payload")
                 trackNotification(payload, true)
             }
         }
@@ -327,8 +327,6 @@ object RemoteNotifications {
     internal var analyticsCdnHost: String? = null
 
     fun publishMessage(message: JsonElement) {
-
-        Log.d("TwilioEngageTest", "publishMessage: $message")
         for (listener in messageObservers) {
             listener(message)
         }
@@ -357,13 +355,7 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    override fun onNewToken(token: String) {
-        Log.d("TwilioEngageTest", "onNewToken (token=$token)")
-    }
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d("onMessageReceived", "onMessageReceived")
-
         // track payload
         val payload = remoteMessage.data.toJsonElement()
         analytics?.track(TwilioEngage.Events.Received.value, buildJsonObject {
