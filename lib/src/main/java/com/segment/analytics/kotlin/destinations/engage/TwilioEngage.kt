@@ -171,6 +171,7 @@ class TwilioEngage(
         payload.properties.getString("message_id")?.let { messageId ->
             payload.properties = updateJsonObject(payload.properties) {
                 val formattedEventName = payload.event.lowercase().replace(' ', '_')
+                it["event_id"] = messageId
                 it["dedup_id"] = messageId + formattedEventName
             }
         }
