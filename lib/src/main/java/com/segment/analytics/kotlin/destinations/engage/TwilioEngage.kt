@@ -161,7 +161,8 @@ class TwilioEngage(
     }
 
     override fun track(payload: TrackEvent): BaseEvent? {
-        Events.from(payload.event) ?: return payload
+        val eventType = Events.from(payload.event)
+        eventType ?: return payload
 
         // only delivered and opened events have payload data (message_id)
         payload.properties.getString("message_id")?.let { messageId ->
@@ -172,7 +173,8 @@ class TwilioEngage(
             }
         }
 
-        return attachSubscriptionData(payload)
+        return if (eventType == Events.Tapped) payload
+        else attachSubscriptionData(payload)
     }
 
     override fun execute(event: BaseEvent): BaseEvent {
