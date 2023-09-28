@@ -160,10 +160,6 @@ class TwilioEngage(
         }
     }
 
-    override fun identify(payload: IdentifyEvent): BaseEvent? {
-        return attachSubscriptionData(payload)
-    }
-
     override fun track(payload: TrackEvent): BaseEvent? {
         Events.from(payload.event) ?: return payload
 
