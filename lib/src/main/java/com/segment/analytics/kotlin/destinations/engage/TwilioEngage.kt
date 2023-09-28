@@ -439,23 +439,16 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         val intent = when (onTap) {
             "open_app" -> {
                 // get the intent of the default activity
-                packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-                    putExtra("push_notification", true)
-                }
+                packageManager.getLaunchIntentForPackage(applicationContext.packageName)
             }
             "open_url" -> {
                 Intent(Intent.ACTION_VIEW).apply {
-                    putExtra("push_notification", true)
                     data = link
                 }
             }
             "deep_link" -> {
                 // get the intent of the default activity
                 packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-                    putExtra("push_notification", true)
-                    remoteMessage.data.forEach { (key, value) ->
-                        putExtra(key, value)
-                    }
                     data = link
                 }
             }
@@ -463,7 +456,12 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-        return PendingIntent.getActivity(applicationContext, 101, intent, flag)
+        return PendingIntent.getActivity(applicationContext, 101, intent?.apply {
+            putExtra("push_notification", true)
+            remoteMessage.data.forEach { (key, value) ->
+                putExtra(key, value)
+            }
+        }, flag)
     }
 
     /**
