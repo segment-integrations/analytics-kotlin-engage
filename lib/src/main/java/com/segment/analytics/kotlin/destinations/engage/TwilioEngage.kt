@@ -160,12 +160,9 @@ class TwilioEngage(
         }
     }
 
-    override fun identify(payload: IdentifyEvent): BaseEvent? {
-        return attachSubscriptionData(payload)
-    }
-
     override fun track(payload: TrackEvent): BaseEvent? {
-        Events.from(payload.event) ?: return payload
+        val eventType = Events.from(payload.event)
+        eventType ?: return payload
 
         // only delivered and opened events have payload data (message_id)
         payload.properties.getString("message_id")?.let { messageId ->
@@ -176,7 +173,8 @@ class TwilioEngage(
             }
         }
 
-        return attachSubscriptionData(payload)
+        return if (eventType == Events.Tapped) payload
+        else attachSubscriptionData(payload)
     }
 
     override fun execute(event: BaseEvent): BaseEvent {
@@ -451,10 +449,6 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
             "deep_link" -> {
                 // get the intent of the default activity
                 packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-                    putExtra("push_notification", true)
-                    remoteMessage.data.forEach { (key, value) ->
-                        putExtra(key, value)
-                    }
                     data = link
                 }
             }
@@ -462,7 +456,12 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
-        return PendingIntent.getActivity(applicationContext, 101, intent, flag)
+        return PendingIntent.getActivity(applicationContext, 101, intent?.apply {
+            putExtra("push_notification", true)
+            remoteMessage.data.forEach { (key, value) ->
+                putExtra(key, value)
+            }
+        }, flag)
     }
 
     /**
