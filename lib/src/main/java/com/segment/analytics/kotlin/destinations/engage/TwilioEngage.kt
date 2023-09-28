@@ -441,10 +441,13 @@ class EngageFirebaseMessagingService : FirebaseMessagingService() {
         val intent = when (onTap) {
             "open_app" -> {
                 // get the intent of the default activity
-                packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+                packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                    putExtra("push_notification", true)
+                }
             }
             "open_url" -> {
                 Intent(Intent.ACTION_VIEW).apply {
+                    putExtra("push_notification", true)
                     data = link
                 }
             }
